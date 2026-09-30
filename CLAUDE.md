@@ -5,6 +5,9 @@
   copy-pasted into email. Use indented plain-text columns or bullet lists instead.
   A fixed-width font can be assumed.
 
+## README stays short
+README.md is at most 150 lines. New detail goes in docs/<topic>.md with a one-line link from the README; never add sections to the README.
+
 ## MANDATORY: Save Progress Every Hour
 
 **Update docs/*.md files and memory files at least once per hour during long-running tasks.**
