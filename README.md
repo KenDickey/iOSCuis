@@ -1,56 +1,30 @@
-# iospharo
+# iOSCuis
 
-A Pharo Smalltalk VM for iOS and macOS, written as a clean C++ interpreter.
+A Cuis Smalltalk VM for iOS and macOS, written as a clean C++ interpreter.
 
 ## Overview
+
+This fork was made to change image invocation in src/Interpreter.cpp for Cuis Smalltalk internals, which differ from Pharo.
+
+Original comment reads:
 
 iospharo runs standard Pharo 13 and Pharo 14 images on iOS devices and Mac
 (via Catalyst). It is a from-scratch interpreter implementation — not a port
 of the Cog JIT VM — with full support for the Sista V1 bytecode set, FFI with
 callbacks, and the standard Pharo test suite.
 
-**Note:** Pharo 12 and earlier use a different class table layout that the VM
-does not yet handle.
+See 
+- https://github.com/avwohl/iospharo
+- https://cuis.st
 
 ## Status
 
-**VM core (solid):**
-- **99.90% test pass rate** on Mac Catalyst (13,040 / 13,053)
-- **99.55% test pass rate** on iOS Simulator
-- FFI with callbacks (sigsetjmp/siglongjmp)
-- All standard VM plugins built-in (B2D, JPEG, DSA, SSL, etc.)
-- Third-party libraries: cairo, freetype, harfbuzz, pixman, libpng, OpenSSL, libssh2, libgit2
-
-**GUI (working):**
-- Metal rendering pipeline — Pharo desktop renders correctly
-- Menu bar, world menu, and context menus all functional
-- Touch-to-mouse event translation (tap, long-press, two-finger, pinch, drag)
-- Hardware keyboard support with modifier keys
-- Image library with download, import, and catalog management
-
-## Install from the App Store
-
-Available for iPad, iPhone, and Mac:
-
-[Download on the App Store](https://apps.apple.com/us/app/pharosmalltalk/id6759073615)
+In Progress (Nothing here to see yet!)
 
 **Requirements:**
 - iPad (5th gen / 2017 or newer) or iPhone (6s / 2015 or newer) or Mac (Apple Silicon or Intel)
 - iOS / iPadOS 15.0 or later, macOS 14.0 or later
 - ~150 MB free storage (app + image + sources)
-
-Pharo images are downloaded in-app (no separate download needed).
-
-## Beta Testing (TestFlight)
-
-There may be a newer pre-release version available via TestFlight:
-
-1. Install **TestFlight** from the App Store (free, ~30 MB)
-2. Open this invite link on your iPad or iPhone: [Join the Beta](https://testflight.apple.com/join/kGmPQFr9)
-3. Tap "Accept" then "Install" — the app appears on your home screen
-
-TestFlight builds expire after 90 days but auto-update when new builds
-are published.
 
 ## Building
 
@@ -94,7 +68,7 @@ MIT — see [LICENSE](LICENSE) and [THIRD_PARTY_LICENSES](THIRD_PARTY_LICENSES).
 ## Credits
 
 iospharo is a clean C++ reimplementation of the architecture defined by the Pharo
-and Squeak projects, and iospharo bundles or links many upstream libraries. The
+Squeak, and Cuis projects, and iospharo bundles or links many upstream libraries. The
 full list with versions and licenses is in [docs/credits.md](docs/credits.md).
 
 This software is based in part on the work of the Independent JPEG Group.
