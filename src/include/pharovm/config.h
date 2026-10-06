@@ -6,8 +6,8 @@
 /* iOS-specific Pharo VM configuration */
 
 /* Common configurations */
-#define VM_NAME "Pharo"
-#define DEFAULT_IMAGE_NAME "Pharo.image"
+#define VM_NAME "Cuis"
+#define DEFAULT_IMAGE_NAME "Cuis.image"
 
 /* Availability of Functions */
 #define HAVE_DIRENT_H
