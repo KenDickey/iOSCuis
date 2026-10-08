@@ -1,4 +1,4 @@
-# Building iospharo
+# Building ioscuis
 
 Back to the [README](../README.md).
 
@@ -19,7 +19,7 @@ brew install meson ninja pkg-config autoconf automake libtool
 
 You also need:
 - **Xcode 15+** (for the iOS/Mac Catalyst app)
-- **A Pharo 13 or 14 image** — download from https://pharo.org/download
+- **A Cuis 7.8 or 7.9 image** — download from https://github.com/Cuius-Smalltalk
 
 ## Building
 
@@ -50,7 +50,7 @@ Takes about 15 minutes on first run. Use `--no-crypto` to skip OpenSSL and libss
 ### Step 3: Build the app
 
 ```bash
-open iospharo.xcodeproj
+open ioscuis.xcodeproj
 ```
 
 Select your target (iOS device, Simulator, or My Mac - Catalyst) and build.
@@ -66,7 +66,7 @@ To manually rebuild the VM xcframework (e.g. after a git pull):
 scripts/build-xcframework.sh
 ```
 
-This produces `Frameworks/PharoVMCore.xcframework` with slices for iOS device
+This produces `Frameworks/CuisVMCore.xcframework` with slices for iOS device
 (arm64), iOS Simulator (arm64 + x86_64), and Mac Catalyst (arm64 + x86_64).
 
 **Code signing (optional):** To deploy to a physical device or the App Store,
@@ -83,7 +83,7 @@ links against the xcframeworks in `Frameworks/`.
 cmake -B build -DCMAKE_BUILD_TYPE=Release
 cmake --build build
 
-# Run headless with a Pharo image
-./build/test_load_image /path/to/Pharo.image
+# Run headless with a Cuis image
+./build/test_load_image /path/to/Cuis.image
 ```
 
