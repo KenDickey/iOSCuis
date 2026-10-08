@@ -34,7 +34,7 @@ Building needs Xcode 15+, CMake, and a few Homebrew tools. The short version:
 scripts/build-libffi.sh
 scripts/build-sdl2.sh
 scripts/build-third-party.sh
-open iospharo.xcodeproj
+open ioscuis.xcodeproj
 ```
 
 The full steps, code signing, and the headless Mac development build are in
