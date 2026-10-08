@@ -1,14 +1,14 @@
-// Shared build configuration for iospharo.
+// Shared build configuration for ioscuis.
 // Local overrides (team ID, signing) go in Local.xcconfig (gitignored).
 
-// Link PharoVMCore via build settings instead of a PBXFileReference.
+// Link CuisVMCore via build settings instead of a PBXFileReference.
 // This avoids "There is no XCFramework found" errors when the xcframework
 // hasn't been built yet — the build phase creates it before linking.
-PHARO_XCFW_SLICE[sdk=iphoneos*] = ios-arm64
-PHARO_XCFW_SLICE[sdk=macosx*] = ios-arm64_x86_64-maccatalyst
-PHARO_XCFW_SLICE[sdk=iphonesimulator*] = ios-arm64_x86_64-simulator
-PHARO_VMCORE_LIB = $(PROJECT_DIR)/Frameworks/PharoVMCore.xcframework/$(PHARO_XCFW_SLICE)/libPharoVMCore.a
+CUIS_XCFW_SLICE[sdk=iphoneos*] = ios-arm64
+CUIS_XCFW_SLICE[sdk=macosx*] = ios-arm64_x86_64-maccatalyst
+CUIS_XCFW_SLICE[sdk=iphonesimulator*] = ios-arm64_x86_64-simulator
+CUIS_VMCORE_LIB = $(PROJECT_DIR)/Frameworks/CuisVMCore.xcframework/$(CUIS_XCFW_SLICE)/libCuisVMCore.a
 
-OTHER_LDFLAGS = -ObjC -all_load -force_load $(PHARO_VMCORE_LIB) -liconv -lbz2 -lz
+OTHER_LDFLAGS = -ObjC -all_load -force_load $(CUIS_VMCORE_LIB) -liconv -lbz2 -lz
 
-#include? "Local.xcconfig"
+#include? "Local.Xcconfig"

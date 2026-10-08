@@ -1,12 +1,12 @@
 /*
- * PharoCanvasView.swift
+ * CuisCanvasView.swift
  *
  * SwiftUI view that wraps MTKView for Metal rendering
- * and handles touch/gesture/keyboard input for Pharo.
+ * and handles touch/gesture/keyboard input for Cuis.
  *
  * Event handling (both platforms):
- *   - Clicks/touch/drag: touchesBegan/Moved/Ended on PharoMTKView
- *   - Keyboard: pressesBegan/pressesEnded on PharoMTKView
+ *   - Clicks/touch/drag: touchesBegan/Moved/Ended on CuisMTKView
+ *   - Keyboard: pressesBegan/pressesEnded on CuisMTKView
  *
  * Event handling (Mac Catalyst only):
  *   - Hover (position): UIHoverGestureRecognizer (no button pressed)
@@ -21,14 +21,14 @@
 import SwiftUI
 import MetalKit
 
-/// Global weak reference to the PharoMTKView for text input control from C callbacks
-weak var gPharoMTKView: PharoMTKView?
+/// Global weak reference to the CuisMTKView for text input control from C callbacks
+weak var gCuisMTKView: CuisMTKView?
 
 // MARK: - Custom MTKView with Direct Touch Handling
 
 /// Custom MTKView subclass that handles touch and mouse events directly
-class PharoMTKView: MTKView {
-    weak var bridge: PharoBridge?
+class CuisMTKView: MTKView {
+    weak var bridge: CuisBridge?
 
     override init(frame frameRect: CGRect, device: MTLDevice?) {
         super.init(frame: frameRect, device: device)
@@ -74,7 +74,7 @@ class PharoMTKView: MTKView {
             // Give hardware keyboard focus back to the view controller
             var r: UIResponder? = self.next
             while r != nil {
-                if let vc = r as? PharoCanvasViewController {
+                if let vc = r as? CuisCanvasViewController {
                     vc.becomeFirstResponder()
                     break
                 }
@@ -93,7 +93,7 @@ class PharoMTKView: MTKView {
 
     /// Dead zone for tap vs drag disambiguation.
     /// Finger movement smaller than this threshold (in points) during a touch
-    /// is suppressed so Pharo sees a clean click, not a drag.  Without this,
+    /// is suppressed so Cuis sees a clean click, not a drag.  Without this,
     /// the inevitable micro-movement of a fingertip triggers Morphic scroll panes.
     private let dragThreshold: CGFloat = 8
     private var touchOrigin: CGPoint = .zero
@@ -108,9 +108,9 @@ class PharoMTKView: MTKView {
     override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
         guard let touch = touches.first, let bridge = bridge else { return }
         let point = touch.location(in: self)
-        var buttons = buttonMaskToPharo(event)
+        var buttons = buttonMaskToCuis(event)
 
-        // Virtual Ctrl key: Ctrl+click = right-click in Pharo
+        // Virtual Ctrl key: Ctrl+click = right-click in Cuis
         if bridge.ctrlModifierActive {
             buttons = IOS_YELLOW_BUTTON
             // Auto-clear after click — one-shot modifier like a phone keyboard's Shift
@@ -178,7 +178,7 @@ class PharoMTKView: MTKView {
         #endif
         // When UIContextMenuInteraction handles a right-click, UIKit cancels
         // the touch. Skip the spurious button-up since contextMenuInteraction
-        // already sent the correct right-click events to Pharo.
+        // already sent the correct right-click events to Cuis.
         if suppressNextTouchCancel {
             suppressNextTouchCancel = false
             return
@@ -258,8 +258,8 @@ class PharoMTKView: MTKView {
                code == .keyboardDeleteForward || code == .keyboardEscape
     }
 
-    /// Map UIKeyModifierFlags to Pharo modifier mask
-    func modifierFlagsToPharo(_ flags: UIKeyModifierFlags) -> Int {
+    /// Map UIKeyModifierFlags to Cuis modifier mask
+    func modifierFlagsToCuis(_ flags: UIKeyModifierFlags) -> Int {
         var mods = 0
         if flags.contains(.shift) { mods |= IOS_SHIFT_KEY }
         if flags.contains(.control) { mods |= IOS_CTRL_KEY }
@@ -268,7 +268,7 @@ class PharoMTKView: MTKView {
         return mods
     }
 
-    /// Map UIKeyboardHIDUsage to Pharo charCode for special keys
+    /// Map UIKeyboardHIDUsage to Cuis charCode for special keys
     func specialKeyCharCode(_ keyCode: UIKeyboardHIDUsage) -> Int32 {
         switch keyCode {
         case .keyboardReturnOrEnter: return 13
@@ -290,7 +290,7 @@ class PharoMTKView: MTKView {
 
     /// Post key down + keystroke events for a UIKey
     func postKeyDown(_ key: UIKey) {
-        let modifiers = Int32(modifierFlagsToPharo(key.modifierFlags))
+        let modifiers = Int32(modifierFlagsToCuis(key.modifierFlags))
         // Check special keys first — on Mac Catalyst, key.characters for
         // backspace/arrows/etc. may contain Apple Private Use Area chars
         // (U+F700–F8FF) that would be misinterpreted as printable text.
@@ -307,7 +307,7 @@ class PharoMTKView: MTKView {
 
     /// Post key up event for a UIKey
     func postKeyUp(_ key: UIKey) {
-        let modifiers = Int32(modifierFlagsToPharo(key.modifierFlags))
+        let modifiers = Int32(modifierFlagsToCuis(key.modifierFlags))
         let special = specialKeyCharCode(key.keyCode)
         if special > 0 {
             vm_postKeyEvent(1, special, 0, modifiers)
@@ -318,7 +318,7 @@ class PharoMTKView: MTKView {
 
     // MARK: - Button Mapping
 
-    func buttonMaskToPharo(_ event: UIEvent?) -> Int {
+    func buttonMaskToCuis(_ event: UIEvent?) -> Int {
         guard let event = event else { return IOS_RED_BUTTON }
         // Check buttonMask for trackpad/mouse right-click (iPad + Mac Catalyst)
         if #available(iOS 13.4, macCatalyst 13.4, *) {
@@ -334,17 +334,17 @@ class PharoMTKView: MTKView {
 
 // MARK: - View Controller
 
-class PharoCanvasViewController: UIViewController {
-    var mtkView: PharoMTKView!
+class CuisCanvasViewController: UIViewController {
+    var mtkView: CuisMTKView!
     var renderer: MetalRenderer?
-    weak var bridge: PharoBridge?
+    weak var bridge: CuisBridge?
 
     /// Fixed top offset for the MTKView, captured from the initial safe area.
     /// Once set, this never changes — preventing keyboard events from shifting
     /// the Metal view when SwiftUI triggers a layout pass.
     private var topConstraint: NSLayoutConstraint?
     /// Fixed height constraint — prevents keyboard-triggered SwiftUI re-renders
-    /// from changing the MTKView height (which would resize the Pharo framebuffer).
+    /// from changing the MTKView height (which would resize the Cuis framebuffer).
     /// Updated only when width changes (real user resize), not for keyboard events.
     private var heightConstraint: NSLayoutConstraint?
     private var layoutFrozen = false
@@ -362,9 +362,9 @@ class PharoCanvasViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
 
-        mtkView = PharoMTKView()
+        mtkView = CuisMTKView()
         mtkView.bridge = bridge
-        gPharoMTKView = mtkView
+        gCuisMTKView = mtkView
         mtkView.translatesAutoresizingMaskIntoConstraints = false
         mtkView.isPaused = false
         mtkView.enableSetNeedsDisplay = false
@@ -449,14 +449,14 @@ class PharoCanvasViewController: UIViewController {
         // menu bar doesn't intercept it (e.g. during first-responder edge cases).
         let quitCommand = UIKeyCommand(input: "q", modifierFlags: .command,
                                        action: #selector(handleQuit(_:)))
-        quitCommand.title = "Quit Pharo Smalltalk"
+        quitCommand.title = "Quit Cuis Smalltalk"
         addKeyCommand(quitCommand)
         #endif
     }
 
     #if targetEnvironment(macCatalyst)
     @objc func handleQuit(_ sender: Any?) {
-        PharoBridge.shared.stop()
+        CuisBridge.shared.stop()
         exit(0)
     }
     #endif
@@ -562,7 +562,7 @@ class PharoCanvasViewController: UIViewController {
 
         // Right-click: UIKit intercepts right-clicks for system context menus
         // before gesture recognizers fire. Use UIContextMenuInteraction to
-        // suppress the system menu and capture the click for Pharo.
+        // suppress the system menu and capture the click for Cuis.
         let contextMenuInteraction = UIContextMenuInteraction(delegate: self)
         targetView.addInteraction(contextMenuInteraction)
 
@@ -578,7 +578,7 @@ class PharoCanvasViewController: UIViewController {
 
         #else
         // iOS: single taps, double taps, and drags are handled by
-        // touchesBegan/Moved/Ended on PharoMTKView (same as Mac Catalyst).
+        // touchesBegan/Moved/Ended on CuisMTKView (same as Mac Catalyst).
         // Only use gesture recognizers for multi-touch and long press.
 
         let longPressGesture = UILongPressGestureRecognizer(
@@ -666,7 +666,7 @@ class PharoCanvasViewController: UIViewController {
         switch gesture.state {
         case .began:
             // touchesBegan already sent RED button down. Clean it up before
-            // sending YELLOW, otherwise Pharo has conflicting button states.
+            // sending YELLOW, otherwise Cuis has conflicting button states.
             bridge.sendTouchUp(at: point, buttons: IOS_RED_BUTTON)
             // Suppress touchesCancelled/touchesEnded from sending another RED up
             mtkView.suppressNextTouchCancel = true
@@ -699,7 +699,7 @@ class PharoCanvasViewController: UIViewController {
 
     /// Track dominant scroll axis to suppress cross-axis noise.
     /// On a small phone screen, a vertical two-finger swipe easily drifts
-    /// horizontally, which the Pharo SpMillerColumnPresenter interprets as
+    /// horizontally, which the Cuis SpMillerColumnPresenter interprets as
     /// a horizontal page-change gesture — resetting scroll position on the
     /// active page.  Once we lock an axis, we zero out the other.
     private var scrollAxisLocked: Bool = false
@@ -759,13 +759,13 @@ class PharoCanvasViewController: UIViewController {
 // MARK: - UIContextMenuInteractionDelegate (Mac Catalyst right-click)
 
 #if targetEnvironment(macCatalyst)
-extension PharoCanvasViewController: UIContextMenuInteractionDelegate {
+extension CuisCanvasViewController: UIContextMenuInteractionDelegate {
     func contextMenuInteraction(
         _ interaction: UIContextMenuInteraction,
         configurationForMenuAtLocation location: CGPoint
     ) -> UIContextMenuConfiguration? {
-        // Capture right-click position and send to Pharo as yellow button click.
-        // In Pharo, yellow-button menus open on mouseDown and close on mouseUp.
+        // Capture right-click position and send to Cuis as yellow button click.
+        // In Cuis, yellow-button menus open on mouseDown and close on mouseUp.
         // Since Mac Catalyst right-click is a single event (not hold), we send
         // both down and up with enough delay for the menu to build and render.
         // The menu then stays open in "click" mode for the user to interact with.
@@ -774,8 +774,8 @@ extension PharoCanvasViewController: UIContextMenuInteractionDelegate {
         if let bridge = bridge {
             bridge.sendMouseMoved(to: location, modifiers: 0)
             bridge.sendTouchDown(at: location, buttons: IOS_YELLOW_BUTTON)
-            // Delay the button-up enough for Pharo to build and render the menu.
-            // 500ms gives the menu builder time to complete. In Pharo, menus that
+            // Delay the button-up enough for Cuis to build and render the menu.
+            // 500ms gives the menu builder time to complete. In Cuis, menus that
             // receive both down+up at the same position "stick" open.
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
                 bridge.sendTouchUp(at: location, buttons: IOS_YELLOW_BUTTON)
@@ -789,7 +789,7 @@ extension PharoCanvasViewController: UIContextMenuInteractionDelegate {
 // MARK: - UIKeyInput (iOS soft keyboard)
 
 #if !targetEnvironment(macCatalyst)
-extension PharoMTKView: UIKeyInput {
+extension CuisMTKView: UIKeyInput {
     var hasText: Bool {
         return true
     }
@@ -825,7 +825,7 @@ extension PharoMTKView: UIKeyInput {
         }
         for char in text {
             guard let scalar = char.unicodeScalars.first else { continue }
-            // Map LF (10) to CR (13) — Pharo uses CR for return key
+            // Map LF (10) to CR (13) — Cuis uses CR for return key
             let charCode = scalar.value == 10 ? Int32(13) : Int32(scalar.value)
             let isPrintable = charCode >= 32 && charCode != 127
             vm_postKeyEvent(0, charCode, 0, mods)  // down → SDL_KEYDOWN
@@ -844,23 +844,23 @@ extension PharoMTKView: UIKeyInput {
 
 // MARK: - SwiftUI Wrapper (UIViewControllerRepresentable)
 
-struct PharoCanvasView: UIViewControllerRepresentable {
+struct CuisCanvasView: UIViewControllerRepresentable {
 
-    @ObservedObject var bridge: PharoBridge
+    @ObservedObject var bridge: CuisBridge
 
-    func makeUIViewController(context: Context) -> PharoCanvasViewController {
-        let vc = PharoCanvasViewController()
+    func makeUIViewController(context: Context) -> CuisCanvasViewController {
+        let vc = CuisCanvasViewController()
         vc.bridge = bridge
         return vc
     }
 
-    func updateUIViewController(_ uiViewController: PharoCanvasViewController, context: Context) {
+    func updateUIViewController(_ uiViewController: CuisCanvasViewController, context: Context) {
     }
 }
 
 // MARK: - Preview
 
 #Preview {
-    PharoCanvasView(bridge: PharoBridge.shared)
+    CuisCanvasView(bridge: CuisBridge.shared)
         .ignoresSafeArea()
 }

@@ -1,13 +1,13 @@
 /*
- * PharoImage.swift
+ * CuisImage.swift
  *
- * Model for a single Pharo image in the image library.
+ * Model for a single Cuis image in the image library.
  * Each image lives in its own subdirectory under Documents/Images/.
  */
 
 import Foundation
 
-struct PharoImage: Codable, Identifiable, Equatable {
+struct CuisImage: Codable, Identifiable, Equatable {
 
     var id: UUID
     var name: String
@@ -15,7 +15,7 @@ struct PharoImage: Codable, Identifiable, Equatable {
     var directoryName: String
     /// Actual .image filename inside the directory
     var imageFileName: String
-    var pharoVersion: String?
+    var cuisVersion: String?
     var createdAt: Date
     var lastLaunchedAt: Date?
     var imageSizeBytes: Int64?
@@ -47,19 +47,19 @@ struct PharoImage: Codable, Identifiable, Equatable {
 
     // MARK: - Convenience Initializer
 
-    /// Create a new PharoImage entry for a freshly downloaded/imported image
+    /// Create a new CuisImage entry for a freshly downloaded/imported image
     static func create(
         name: String,
         directoryName: String,
         imageFileName: String,
-        pharoVersion: String? = nil
-    ) -> PharoImage {
-        PharoImage(
+        cuisVersion: String? = nil
+    ) -> CuisImage {
+        CuisImage(
             id: UUID(),
             name: name,
             directoryName: directoryName,
             imageFileName: imageFileName,
-            pharoVersion: pharoVersion,
+            cuisVersion: cuisVersion,
             createdAt: Date(),
             lastLaunchedAt: nil,
             imageSizeBytes: nil
@@ -72,16 +72,16 @@ struct PharoImage: Codable, Identifiable, Equatable {
         imageSizeBytes = attrs?[.size] as? Int64
     }
 
-    /// Human-readable version label (e.g., "130" -> "Pharo 13")
+    /// Human-readable version label (e.g., "130" -> "Cuis 13")
     var versionLabel: String {
-        guard let version = pharoVersion else { return "—" }
+        guard let version = cuisVersion else { return "—" }
         switch version {
-        case "140": return "Pharo 14"
-        case "130": return "Pharo 13"
-        case "120": return "Pharo 12"
-        case "110": return "Pharo 11"
-        case "100": return "Pharo 10"
-        default: return "Pharo \(version)"
+        case "140": return "Cuis 14"
+        case "130": return "Cuis 13"
+        case "120": return "Cuis 12"
+        case "110": return "Cuis 11"
+        case "100": return "Cuis 10"
+        default: return "Cuis \(version)"
         }
     }
 

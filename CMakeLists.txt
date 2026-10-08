@@ -1,12 +1,12 @@
-# PharoVM - Clean C++ VM for macOS and iOS
+# CuisVM - Clean C++ VM for macOS and iOS
 cmake_minimum_required(VERSION 3.20)
-project(PharoVM LANGUAGES C CXX OBJC)
+project(CuisVM LANGUAGES C CXX OBJC)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # Crypto build option — controls DSAPrims, SqueakSSL, and bundled OpenSSL
-option(PHARO_WITH_CRYPTO "Include cryptographic libraries (DSAPrims, SqueakSSL, OpenSSL)" ON)
+option(CUIS_WITH_CRYPTO "Include cryptographic libraries (DSAPrims, SqueakSSL, OpenSSL)" ON)
 
 # Detect platform for xcframework slice selection
 # FORCE_XCFRAMEWORK_PLATFORM can be set externally (e.g., for Mac Catalyst builds
@@ -27,7 +27,7 @@ endif()
 
 message(STATUS "Building for platform: ${CMAKE_SYSTEM_NAME}")
 message(STATUS "XCFramework slice: ${XCFRAMEWORK_PLATFORM}")
-message(STATUS "Crypto support: ${PHARO_WITH_CRYPTO}")
+message(STATUS "Crypto support: ${CUIS_WITH_CRYPTO}")
 
 # VM Core Library
 set(VM_SOURCES
@@ -67,7 +67,7 @@ file(GLOB TESTLIB_SOURCES src/vm/plugins/testlib/*.c)
 list(APPEND PLUGIN_C_SOURCES ${TESTLIB_SOURCES})
 
 # Crypto plugins (conditional)
-if(PHARO_WITH_CRYPTO)
+if(CUIS_WITH_CRYPTO)
     list(APPEND PLUGIN_C_SOURCES
         src/vm/plugins/DSAPrims.c
         src/vm/plugins/SqueakSSL.c
@@ -79,17 +79,17 @@ endif()
 set_source_files_properties(${PLUGIN_C_SOURCES} PROPERTIES LANGUAGE C)
 list(APPEND VM_SOURCES ${PLUGIN_C_SOURCES})
 
-add_library(PharoVMCore STATIC ${VM_SOURCES})
+add_library(CuisVMCore STATIC ${VM_SOURCES})
 
-# Pass PHARO_WITH_CRYPTO as a compile definition
-if(PHARO_WITH_CRYPTO)
-    target_compile_definitions(PharoVMCore PUBLIC PHARO_WITH_CRYPTO=1)
+# Pass CUIS_WITH_CRYPTO as a compile definition
+if(CUIS_WITH_CRYPTO)
+    target_compile_definitions(CuisVMCore PUBLIC CUIS_WITH_CRYPTO=1)
 else()
-    target_compile_definitions(PharoVMCore PUBLIC PHARO_WITH_CRYPTO=0)
+    target_compile_definitions(CuisVMCore PUBLIC CUIS_WITH_CRYPTO=0)
 endif()
 
 # Include directories - use platform-appropriate xcframework slice
-target_include_directories(PharoVMCore PUBLIC
+target_include_directories(CuisVMCore PUBLIC
     ${CMAKE_SOURCE_DIR}/src/vm
     ${CMAKE_SOURCE_DIR}/src/vm/plugins
     ${CMAKE_SOURCE_DIR}/src/vm/plugins/jpeg
@@ -99,7 +99,7 @@ target_include_directories(PharoVMCore PUBLIC
     ${CMAKE_SOURCE_DIR}/Frameworks/libffi.xcframework/${XCFRAMEWORK_PLATFORM}/Headers
 )
 
-target_compile_options(PharoVMCore PRIVATE
+target_compile_options(CuisVMCore PRIVATE
     -Wall -Wextra -Wno-unused-parameter
 )
 
@@ -119,7 +119,7 @@ if(TESTLIB_SOURCES)
 endif()
 
 # Suppress deprecation warnings in SqueakSSL (Apple SecureTransport deprecated but still works)
-if(PHARO_WITH_CRYPTO)
+if(CUIS_WITH_CRYPTO)
     set_source_files_properties(src/vm/plugins/sqMacSSL.c PROPERTIES
         COMPILE_FLAGS "-w"
     )
@@ -129,14 +129,14 @@ endif()
 set(SDL2_LIBRARY ${CMAKE_SOURCE_DIR}/Frameworks/SDL2.xcframework/${XCFRAMEWORK_PLATFORM}/libSDL2.a)
 if(EXISTS ${SDL2_LIBRARY})
     # Force load all symbols from SDL2 so they're available via dlsym at runtime
-    target_link_libraries(PharoVMCore "-Wl,-force_load,${SDL2_LIBRARY}")
+    target_link_libraries(CuisVMCore "-Wl,-force_load,${SDL2_LIBRARY}")
     message(STATUS "Using SDL2 (force_load): ${SDL2_LIBRARY}")
 endif()
 
 # Link libffi static library
 set(LIBFFI_LIBRARY ${CMAKE_SOURCE_DIR}/Frameworks/libffi.xcframework/${XCFRAMEWORK_PLATFORM}/libffi.a)
 if(EXISTS ${LIBFFI_LIBRARY})
-    target_link_libraries(PharoVMCore ${LIBFFI_LIBRARY})
+    target_link_libraries(CuisVMCore ${LIBFFI_LIBRARY})
     message(STATUS "Using libffi: ${LIBFFI_LIBRARY}")
 endif()
 
@@ -144,7 +144,7 @@ endif()
 if(APPLE)
     if(CMAKE_SYSTEM_NAME STREQUAL "iOS")
         # iOS frameworks for SDL2 and text rendering
-        target_link_libraries(PharoVMCore
+        target_link_libraries(CuisVMCore
             "-framework UIKit"
             "-framework Foundation"
             "-framework CoreGraphics"
@@ -160,12 +160,12 @@ if(APPLE)
             "-framework CoreMIDI"
         )
         # SqueakSSL uses Apple Security.framework
-        if(PHARO_WITH_CRYPTO)
-            target_link_libraries(PharoVMCore "-framework Security")
+        if(CUIS_WITH_CRYPTO)
+            target_link_libraries(CuisVMCore "-framework Security")
         endif()
     else()
         # macOS frameworks for SDL2 and text rendering
-        target_link_libraries(PharoVMCore
+        target_link_libraries(CuisVMCore
             "-framework Cocoa"
             "-framework IOKit"
             "-framework CoreGraphics"
@@ -184,8 +184,8 @@ if(APPLE)
             "-liconv"
         )
         # SqueakSSL uses Apple Security.framework
-        if(PHARO_WITH_CRYPTO)
-            target_link_libraries(PharoVMCore "-framework Security")
+        if(CUIS_WITH_CRYPTO)
+            target_link_libraries(CuisVMCore "-framework Security")
         endif()
     endif()
 endif()
@@ -198,17 +198,17 @@ foreach(LIB_ENTRY cairo:libcairo.a freetype:libfreetype.a pixman:libpixman-1.a h
     list(GET LIB_PARTS 1 LIB_FILE)
     set(LIB_XCF ${CMAKE_SOURCE_DIR}/Frameworks/${XCF_NAME}.xcframework/${XCFRAMEWORK_PLATFORM}/${LIB_FILE})
     if(EXISTS ${LIB_XCF})
-        target_link_libraries(PharoVMCore ${LIB_XCF})
+        target_link_libraries(CuisVMCore ${LIB_XCF})
         message(STATUS "Using ${XCF_NAME}: ${LIB_XCF}")
     endif()
 endforeach()
 
 # Crypto xcframeworks (conditional)
-if(PHARO_WITH_CRYPTO)
+if(CUIS_WITH_CRYPTO)
     foreach(LIB_NAME ssl crypto ssh2 git2)
         set(LIB_XCF ${CMAKE_SOURCE_DIR}/Frameworks/lib${LIB_NAME}.xcframework/${XCFRAMEWORK_PLATFORM}/lib${LIB_NAME}.a)
         if(EXISTS ${LIB_XCF})
-            target_link_libraries(PharoVMCore ${LIB_XCF})
+            target_link_libraries(CuisVMCore ${LIB_XCF})
             message(STATUS "Using lib${LIB_NAME}: ${LIB_XCF}")
         endif()
     endforeach()
@@ -217,7 +217,7 @@ endif()
 # Test executables (macOS only)
 if(NOT CMAKE_SYSTEM_NAME STREQUAL "iOS")
     add_executable(test_load_image src/vm/test_load_image.cpp)
-    target_link_libraries(test_load_image PharoVMCore)
+    target_link_libraries(test_load_image CuisVMCore)
     # Force export testlib symbols so they're available via dlsym
     target_link_options(test_load_image PRIVATE
         -Wl,-u,_singleCallToCallback
@@ -249,15 +249,15 @@ if(NOT CMAKE_SYSTEM_NAME STREQUAL "iOS")
     )
 
     add_executable(test_class_table src/vm/test_class_table.cpp)
-    target_link_libraries(test_class_table PharoVMCore)
+    target_link_libraries(test_class_table CuisVMCore)
 
     add_executable(test_platform src/platform/test_platform.cpp)
-    target_link_libraries(test_platform PharoVMCore)
+    target_link_libraries(test_platform CuisVMCore)
 
     add_executable(test_ios_bridge src/platform/test_ios_bridge.cpp)
-    target_link_libraries(test_ios_bridge PharoVMCore)
+    target_link_libraries(test_ios_bridge CuisVMCore)
 endif()
 
-message(STATUS "PharoVM Clean C++ configured")
+message(STATUS "CuisVM Clean C++ configured")
 message(STATUS "  Build tests with: cmake --build build -- test_load_image test_platform")
 message(STATUS "  For Swift apps, use Xcode with the bridging header")

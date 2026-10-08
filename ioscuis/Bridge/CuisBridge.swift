@@ -1,7 +1,7 @@
 /*
- * PharoBridge.swift
+ * CuisBridge.swift
  *
- * Swift wrapper for the Pharo VM C API.
+ * Swift wrapper for the Cuis VM C API.
  * Manages VM lifecycle and bridges events between SwiftUI and the VM.
  */
 
@@ -12,12 +12,12 @@ import UIKit
 /// Buffer for clipboard text returned to C (freed on next call)
 private var gClipboardBuffer: UnsafeMutablePointer<CChar>?
 
-/// Main bridge between Swift and the Pharo VM
+/// Main bridge between Swift and the Cuis VM
 @MainActor
-class PharoBridge: ObservableObject {
+class CuisBridge: ObservableObject {
 
     /// Singleton instance
-    static let shared = PharoBridge()
+    static let shared = CuisBridge()
 
     /// Published state
     @Published var isRunning = false
@@ -119,17 +119,17 @@ class PharoBridge: ObservableObject {
             DispatchQueue.main.async {
                 #if targetEnvironment(macCatalyst)
                 // Mac Catalyst: becomeFirstResponder captures hardware keyboard
-                // without showing an on-screen keyboard, so always honor Pharo's request.
-                guard let view = gPharoMTKView else { return }
+                // without showing an on-screen keyboard, so always honor Cuis's request.
+                guard let view = gCuisMTKView else { return }
                 if active {
                     view.becomeFirstResponder()
                 } else {
                     view.resignFirstResponder()
                 }
                 #else
-                // iOS: Don't let Pharo's SDL_StartTextInput show the soft keyboard.
+                // iOS: Don't let Cuis's SDL_StartTextInput show the soft keyboard.
                 // The user controls the keyboard via the ModifierStrip toggle.
-                // Pharo calls SDL_StartTextInput aggressively (e.g. when refocusing
+                // Cuis calls SDL_StartTextInput aggressively (e.g. when refocusing
                 // any morph), which would pop the keyboard at unwanted times.
                 #endif
             }
@@ -171,7 +171,7 @@ class PharoBridge: ObservableObject {
 
     // MARK: - VM Lifecycle
 
-    /// Load a Pharo image file
+    /// Load a Cuis image file
     func loadImage(at path: String) -> Bool {
         guard FileManager.default.fileExists(atPath: path) else {
             errorMessage = "Image file not found: \(path)"
@@ -217,9 +217,9 @@ class PharoBridge: ObservableObject {
         parameters.edenSize = 10 * 1024 * 1024
         parameters.maxCodeSize = 0
 
-        // Pre-set display size so Pharo creates the Welcome window at the
+        // Pre-set display size so Cuis creates the Welcome window at the
         // correct dimensions from the start. Without this, the default 1024x768
-        // makes Pharo lay out for a large screen, then the resize to the actual
+        // makes Cuis lay out for a large screen, then the resize to the actual
         // Metal view size cuts off content that doesn't auto-shrink.
         if let scene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
            let window = scene.windows.first {
@@ -242,7 +242,7 @@ class PharoBridge: ObservableObject {
             }
         }
 
-        // Change working directory to image's directory so Pharo's
+        // Change working directory to image's directory so Cuis's
         // StartupPreferencesLoader finds startup.st alongside the image
         let imageDir = (imagePath as NSString).deletingLastPathComponent
         #if DEBUG
@@ -251,7 +251,7 @@ class PharoBridge: ObservableObject {
         FileManager.default.changeCurrentDirectoryPath(imageDir)
 
         // Write startup.st + startup-{13,14}.st with image patches
-        // (loaded by Pharo's StartupPreferencesLoader on every image start).
+        // (loaded by Cuis's StartupPreferencesLoader on every image start).
         // Always overwrite — these are auto-generated. Users add custom
         // patches via startup-user.st, which is never overwritten.
         Self.writeStartupScript(to: imageDir)
@@ -303,12 +303,12 @@ class PharoBridge: ObservableObject {
     //
     // The startup system writes three files next to the .image file:
     //
-    //   startup.st       Dispatcher — detects Pharo version, loads the
+    //   startup.st       Dispatcher — detects Cuis version, loads the
     //                    version-specific file, then loads user overrides.
-    //   startup-13.st   All patches for Pharo 13 (common + P13-specific).
-    //   startup-14.st   All patches for Pharo 14 (common + P14-specific).
+    //   startup-13.st   All patches for Cuis 13 (common + P13-specific).
+    //   startup-14.st   All patches for Cuis 14 (common + P14-specific).
     //
-    // Pharo's StartupPreferencesLoader auto-loads startup.st from the
+    // Cuis's StartupPreferencesLoader auto-loads startup.st from the
     // working directory on every image startup.
     //
     // Users can create startup-user.st in the image directory for custom
@@ -464,7 +464,7 @@ class PharoBridge: ObservableObject {
                         aCanvas drawString: aString in: stringBounds.
                         stringBounds := stringBounds top: stringBounds top + lineH ] ] ]'.
 
-        "Fix: prevent windows from opening under the Pharo menu bar."
+        "Fix: prevent windows from opening under the Cuis menu bar."
         SystemWindow compile: 'openInWorld: aWorld
             super openInWorld: aWorld.
             aWorld submorphsDo: [ :m |
@@ -504,20 +504,20 @@ class PharoBridge: ObservableObject {
         ] fork.
         """
 
-        // ── Pharo 13-only patches ──
+        // ── Cuis 13-only patches ──
 
         let p13Patches = """
 
-        "About window: add Pharo Smalltalk VM disclaimer and source link."
+        "About window: add Cuis Smalltalk VM disclaimer and source link."
         SmalltalkImage compile: 'systemInformationString
             | s |
             s := String streamContents: [ :stream |
                 stream
-                    nextPutAll: ''Pharo '';
+                    nextPutAll: ''Cuis '';
                     nextPutAll: SystemVersion current dottedMajorMinorPatch; cr; cr;
-                    nextPutAll: ''Running on Pharo Smalltalk — a community VM for iOS and macOS.''; cr;
-                    nextPutAll: ''This is NOT the official Pharo VM.''; cr; cr;
-                    nextPutAll: ''Source code: https://github.com/avwohl/iospharo''; cr; cr;
+                    nextPutAll: ''Running on Cuis Smalltalk — a community VM for iOS and macOS.''; cr;
+                    nextPutAll: ''This is NOT the official Cuis VM.''; cr; cr;
+                    nextPutAll: ''Source code: https://github.com/avwohl/ioscuis''; cr; cr;
                     nextPutAll: ''Built from: '';
                     nextPutAll: SystemVersion current commitHash; cr;
                     nextPutAll: ''Last update: '';
@@ -534,25 +534,25 @@ class PharoBridge: ObservableObject {
           ] fork ].
         """
 
-        // ── Pharo 14-only patches ──
+        // ── Cuis 14-only patches ──
 
         let p14Patches = """
 
-        "About window: add Pharo Smalltalk VM disclaimer and source link."
-        (Smalltalk hasClassNamed: #StPharoSettings) ifTrue: [
-            StPharoSettings class compile: 'openPharoAbout
+        "About window: add Cuis Smalltalk VM disclaimer and source link."
+        (Smalltalk hasClassNamed: #StCuisSettings) ifTrue: [
+            StCuisSettings class compile: 'openCuisAbout
               | about |
-              about := String cr , ''Pharo '' , SystemVersion current dottedMajorMinorPatch , String cr,
+              about := String cr , ''Cuis '' , SystemVersion current dottedMajorMinorPatch , String cr,
                 String cr,
-                ''Running on Pharo Smalltalk — a community VM for iOS and macOS.'' , String cr,
-                ''This is NOT the official Pharo VM.'' , String cr , String cr,
-                ''Source code: https://github.com/avwohl/iospharo'' , String cr , String cr,
+                ''Running on Cuis Smalltalk — a community VM for iOS and macOS.'' , String cr,
+                ''This is NOT the official Cuis VM.'' , String cr , String cr,
+                ''Source code: https://github.com/avwohl/ioscuis'' , String cr , String cr,
                 ''Build information: '', SystemVersion current asString, String cr,
                 SystemVersion current date asString , String cr, String cr,
                 Smalltalk licenseString.
               SpInformDialog new
-                title: ''About Pharo'';
-                icon: (self iconNamed: #pharo);
+                title: ''About Cuis'';
+                icon: (self iconNamed: #cuis);
                 label: about;
                 acceptLabel: ''Close'';
                 openDialog'].
@@ -579,15 +579,15 @@ class PharoBridge: ObservableObject {
         // ── Assemble the three files ──
 
         let header13 = """
-        "startup-13.st — Auto-generated by Pharo Smalltalk VM."
-        "Patches for Pharo 13 images.  Do not edit — changes will be overwritten."
+        "startup-13.st — Auto-generated by Cuis Smalltalk VM."
+        "Patches for Cuis 13 images.  Do not edit — changes will be overwritten."
         "To add custom patches, create startup-user.st in this directory."
         Stdio stderr nextPutAll: '[startup-13] Loading patches'; lf; flush.
         """
 
         let header14 = """
-        "startup-14.st — Auto-generated by Pharo Smalltalk VM."
-        "Patches for Pharo 14 images.  Do not edit — changes will be overwritten."
+        "startup-14.st — Auto-generated by Cuis Smalltalk VM."
+        "Patches for Cuis 14 images.  Do not edit — changes will be overwritten."
         "To add custom patches, create startup-user.st in this directory."
         Stdio stderr nextPutAll: '[startup-14] Loading patches'; lf; flush.
         """
@@ -600,8 +600,8 @@ class PharoBridge: ObservableObject {
 
         // startup.st — the dispatcher loaded by StartupPreferencesLoader
         let dispatcher = """
-        "startup.st — Auto-generated by Pharo Smalltalk VM."
-        "Detects the Pharo version and loads the appropriate patch file."
+        "startup.st — Auto-generated by Cuis Smalltalk VM."
+        "Detects the Cuis version and loads the appropriate patch file."
         "See docs/startup-system.md for details."
         | version file |
 
@@ -612,7 +612,7 @@ class PharoBridge: ObservableObject {
             FreeTypeSettings current instVarNamed: 'bitBltSubPixelAvailable' put: false].
 
         version := SystemVersion current major.
-        Stdio stderr nextPutAll: '[startup] Pharo '; nextPutAll: version printString; lf; flush.
+        Stdio stderr nextPutAll: '[startup] Cuis '; nextPutAll: version printString; lf; flush.
 
         "Load version-specific patches"
         file := version >= 14
@@ -715,7 +715,7 @@ class PharoBridge: ObservableObject {
 
     /// Send a full key shortcut sequence (down + stroke + up) for toolbar action buttons.
     /// Unlike sendKeyTyped which only sends down + up, this includes the stroke event
-    /// that Pharo needs to process the character as text input with modifiers.
+    /// that Cuis needs to process the character as text input with modifiers.
     func sendKeyShortcut(_ character: Character, modifiers: Int) {
         guard let scalar = character.unicodeScalars.first else { return }
         let code = Int32(scalar.value)
@@ -726,7 +726,7 @@ class PharoBridge: ObservableObject {
     }
 
     /// Send a raw key down + up by integer key code, incorporating active modifier toggles.
-    /// Clears modifier toggles after use (same behavior as PharoCanvasView keyboard input).
+    /// Clears modifier toggles after use (same behavior as CuisCanvasView keyboard input).
     func sendRawKey(_ charCode: Int32, keyCode: Int32 = 0, modifiers: Int32 = 0) {
         var mods = modifiers
         if ctrlModifierActive { mods |= Int32(IOS_CTRL_KEY) }

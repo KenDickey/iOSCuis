@@ -1,5 +1,5 @@
 #!/bin/bash
-# Build PharoVMCore.xcframework for iOS Device, Mac Catalyst, and iOS Simulator
+# Build CuisVMCore.xcframework for iOS Device, Mac Catalyst, and iOS Simulator
 #
 # Builds arm64 and x86_64 slices for Mac Catalyst and iOS Simulator,
 # then combines them with lipo into universal binaries.
@@ -18,11 +18,11 @@ PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
 cd "$PROJECT_DIR"
 
 BUILD_BASE="$PROJECT_DIR/build-xcframework"
-XCFRAMEWORK_OUTPUT="$PROJECT_DIR/Frameworks/PharoVMCore.xcframework"
+XCFRAMEWORK_OUTPUT="$PROJECT_DIR/Frameworks/CuisVMCore.xcframework"
 
-XCFRAMEWORK_TMP="$PROJECT_DIR/Frameworks/PharoVMCore-tmp.xcframework"
+XCFRAMEWORK_TMP="$PROJECT_DIR/Frameworks/CuisVMCore-tmp.xcframework"
 
-echo "=== Building PharoVMCore.xcframework (iOS Device + Mac Catalyst + iOS Simulator) ==="
+echo "=== Building CuisVMCore.xcframework (iOS Device + Mac Catalyst + iOS Simulator) ==="
 
 # Clean previous build intermediates (but keep existing xcframework until new one is ready)
 rm -rf "$BUILD_BASE"
@@ -70,15 +70,15 @@ build_slice() {
 
     cmake --build "$builddir" -- -j$(sysctl -n hw.ncpu)
 
-    local lib="$builddir/libPharoVMCore.a"
+    local lib="$builddir/libCuisVMCore.a"
     if [ ! -f "$lib" ]; then
         echo "ERROR: $slice_name build failed — library not found at $lib"
         exit 1
     fi
 
-    # Merge all third-party static libraries into PharoVMCore.a so that
+    # Merge all third-party static libraries into CuisVMCore.a so that
     # all symbols (cairo, freetype, libgit2, etc.) are available via dlsym
-    # at runtime. Without this, the Pharo image can't find them via FFI.
+    # at runtime. Without this, the Cuis image can't find them via FFI.
     local third_party_libs=()
     local thindir="$builddir/thin-libs"
     mkdir -p "$thindir"
@@ -110,10 +110,10 @@ build_slice() {
     done
 
     if [ ${#third_party_libs[@]} -gt 0 ]; then
-        echo "  Merging ${#third_party_libs[@]} third-party libraries into PharoVMCore.a"
-        mv "$lib" "$builddir/libPharoVMCore-vm-only.a"
-        libtool -static -o "$lib" "$builddir/libPharoVMCore-vm-only.a" "${third_party_libs[@]}"
-        rm "$builddir/libPharoVMCore-vm-only.a"
+        echo "  Merging ${#third_party_libs[@]} third-party libraries into CuisVMCore.a"
+        mv "$lib" "$builddir/libCuisVMCore-vm-only.a"
+        libtool -static -o "$lib" "$builddir/libCuisVMCore-vm-only.a" "${third_party_libs[@]}"
+        rm "$builddir/libCuisVMCore-vm-only.a"
     fi
     rm -rf "$thindir"
 
@@ -127,8 +127,8 @@ make_universal() {
     local lib2="$3"
 
     mkdir -p "$output_dir"
-    lipo -create "$lib1" "$lib2" -output "$output_dir/libPharoVMCore.a"
-    echo "Universal: $(lipo -info "$output_dir/libPharoVMCore.a" 2>&1)"
+    lipo -create "$lib1" "$lib2" -output "$output_dir/libCuisVMCore.a"
+    echo "Universal: $(lipo -info "$output_dir/libCuisVMCore.a" 2>&1)"
 }
 
 # --- Build all slices ---
@@ -156,20 +156,20 @@ echo ""
 echo "=== Creating universal binaries ==="
 
 make_universal "$BUILD_BASE/maccatalyst-universal" \
-    "$BUILD_BASE/maccatalyst-arm64/libPharoVMCore.a" \
-    "$BUILD_BASE/maccatalyst-x86_64/libPharoVMCore.a"
+    "$BUILD_BASE/maccatalyst-arm64/libCuisVMCore.a" \
+    "$BUILD_BASE/maccatalyst-x86_64/libCuisVMCore.a"
 
 make_universal "$BUILD_BASE/simulator-universal" \
-    "$BUILD_BASE/simulator-arm64/libPharoVMCore.a" \
-    "$BUILD_BASE/simulator-x86_64/libPharoVMCore.a"
+    "$BUILD_BASE/simulator-arm64/libCuisVMCore.a" \
+    "$BUILD_BASE/simulator-x86_64/libCuisVMCore.a"
 
 # --- Create XCFramework ---
 echo ""
 echo "=== Creating XCFramework ==="
 xcodebuild -create-xcframework \
-    -library "$BUILD_BASE/iphoneos/libPharoVMCore.a" \
-    -library "$BUILD_BASE/maccatalyst-universal/libPharoVMCore.a" \
-    -library "$BUILD_BASE/simulator-universal/libPharoVMCore.a" \
+    -library "$BUILD_BASE/iphoneos/libCuisVMCore.a" \
+    -library "$BUILD_BASE/maccatalyst-universal/libCuisVMCore.a" \
+    -library "$BUILD_BASE/simulator-universal/libCuisVMCore.a" \
     -output "$XCFRAMEWORK_TMP"
 
 # Atomic swap: only replace the old xcframework after the new one is fully built.
@@ -185,5 +185,5 @@ echo "=== Done! ==="
 echo "XCFramework created at: $XCFRAMEWORK_OUTPUT"
 echo "Slices:"
 for dir in "$XCFRAMEWORK_OUTPUT"/*/; do
-    [ -f "$dir/libPharoVMCore.a" ] && echo "  $(basename "$dir"): $(lipo -info "$dir/libPharoVMCore.a" 2>&1)"
+    [ -f "$dir/libCuisVMCore.a" ] && echo "  $(basename "$dir"): $(lipo -info "$dir/libCuisVMCore.a" 2>&1)"
 done

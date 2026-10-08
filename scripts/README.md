@@ -6,7 +6,7 @@
 - `build-third-party.sh` — Build cairo, freetype, harfbuzz, pixman, libpng, OpenSSL, libssh2, libgit2
 
 ## Test Running
-- `pharo-headless-test/` — Submodule: headless test runner + fake GUI (https://github.com/avwohl/pharo-headless-test)
+- `cuis-headless-test/` — Submodule: headless test runner + fake GUI (https://github.com/avwohl/cuis-headless-test)
 - `run_batch_tests.sh` — Shell wrapper that runs tests in batches of 50 classes
 - `run_regression_tests.st` — Regression test runner
 - `run_callback_suite.st` — FFI callback test suite
@@ -19,7 +19,7 @@
 - `export_primitives.py` — Python wrapper for PrimitiveTableExporter
 
 ## Image Preparation
-- `prepare_image.st` — Prepare a Pharo image for testing
+- `prepare_image.st` — Prepare a Cuis image for testing
 - `simple_startup.st` — Minimal startup test script
 - `SimpleFormWorldRenderer.st` — Fallback form renderer for headless mode
 

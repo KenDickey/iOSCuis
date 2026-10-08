@@ -1,14 +1,14 @@
 /*
- * iosparoApp.swift
+ * ioscuisApp.swift
  *
- * Main SwiftUI app entry point for the iOS Pharo client.
+ * Main SwiftUI app entry point for the iOS Cuis client.
  *
  * Event handling strategy:
- *   - Mouse position: UIHoverGestureRecognizer on PharoMTKView (Mac Catalyst)
- *   - Button clicks: touchesBegan/Ended on PharoMTKView (both platforms)
- *   - Scroll: UIPanGestureRecognizer (2-finger) on PharoMTKView (Mac Catalyst)
- *   - Keyboard: pressesBegan/Ended on PharoMTKView (both platforms)
- * All events handled via UIKit on PharoMTKView — no CGEventTap needed.
+ *   - Mouse position: UIHoverGestureRecognizer on CuisMTKView (Mac Catalyst)
+ *   - Button clicks: touchesBegan/Ended on CuisMTKView (both platforms)
+ *   - Scroll: UIPanGestureRecognizer (2-finger) on CuisMTKView (Mac Catalyst)
+ *   - Keyboard: pressesBegan/Ended on CuisMTKView (both platforms)
+ * All events handled via UIKit on CuisMTKView — no CGEventTap needed.
  */
 
 import SwiftUI
@@ -36,7 +36,7 @@ class SceneDelegate: NSObject, UIWindowSceneDelegate {
         }
 
         // Move traffic light buttons above content so they don't overlap
-        // the Pharo menu bar. Use a standard toolbar to create title bar space.
+        // the Cuis menu bar. Use a standard toolbar to create title bar space.
         if let titlebar = windowScene.titlebar {
             titlebar.titleVisibility = .hidden
             titlebar.toolbarStyle = .automatic
@@ -47,7 +47,7 @@ class SceneDelegate: NSObject, UIWindowSceneDelegate {
         // When the last window closes on Mac Catalyst, quit the app
         let remaining = UIApplication.shared.connectedScenes.filter { $0 != scene }
         if remaining.isEmpty {
-            PharoBridge.shared.stop()
+            CuisBridge.shared.stop()
             exit(0)
         }
     }
@@ -83,7 +83,7 @@ class AppDelegate: NSObject, UIApplicationDelegate {
         // The previous Task + Thread.sleep approach deadlocked because
         // sleeping the main thread prevented the Task from executing.
         MainActor.assumeIsolated {
-            PharoBridge.shared.stop()
+            CuisBridge.shared.stop()
         }
     }
 }
@@ -92,7 +92,7 @@ class AppDelegate: NSObject, UIApplicationDelegate {
 struct iosparoApp: App {
 
     @UIApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
-    @StateObject private var bridge = PharoBridge.shared
+    @StateObject private var bridge = CuisBridge.shared
     @StateObject private var imageManager = ImageManager()
 
     var body: some Scene {
@@ -110,8 +110,8 @@ struct iosparoApp: App {
         .commands {
             // Enable Quit menu item (Cmd+Q) on Mac Catalyst
             CommandGroup(replacing: .appTermination) {
-                Button("Quit Pharo Smalltalk") {
-                    PharoBridge.shared.stop()
+                Button("Quit Cuis Smalltalk") {
+                    CuisBridge.shared.stop()
                     exit(0)
                 }
                 .keyboardShortcut("q")

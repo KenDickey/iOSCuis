@@ -15,9 +15,9 @@
     <key>CFBundlePackageType</key>
     <string>APPL</string>
     <key>CFBundleShortVersionString</key>
-    <string>@IOSPHARO_VERSION@</string>
+    <string>@IOSCUIS_VERSION@</string>
     <key>CFBundleVersion</key>
-    <string>@IOSPHARO_BUILD@</string>
+    <string>@IOSCUIS_BUILD@</string>
     <key>LSRequiresIPhoneOS</key>
     <true/>
     <key>UILaunchScreen</key>
