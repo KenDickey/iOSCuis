@@ -20,6 +20,8 @@ See
 ## Status
 
 In Progress (Nothing here to see yet!)
+Needs Doing 
+ - Display & UI/Event hookup [FFI/SDL2]
 
 **Requirements:**
 - iPad (5th gen / 2017 or newer) or iPhone (6s / 2015 or newer) or Mac (Apple Silicon or Intel)
